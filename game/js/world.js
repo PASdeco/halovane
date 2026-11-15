@@ -1,12 +1,12 @@
-// Saltworks: the map from the design blueprint, section 7. Everything static is merged
+// Halbeck Works: the map from the design blueprint, section 7. Everything static is merged
 // into a handful of draw calls: one vertex-coloured Lambert mesh for the shaded world,
 // one basic-material mesh for signage. The same boxes that are drawn are registered as
 // collision solids, so what you see is exactly what blocks you.
 //
-// Coordinates: x east, z south. Tide (attack) spawns south at Intake, Ember (defence)
-// north at Boiler. Two sites: A (Brine Pans) north-west, B (Tank Farm) north-east,
-// Conveyor down the middle, Pump House and Loading Dock as connectors, West Channel
-// and East Ramp as the long flanks.
+// Coordinates: x east, z south. Azurite (attack) spawns south at Sluice Gate, Realgar (defence)
+// north at Kiln Hall. Two sites: A (Vesper Pans) north-west, B (Ironwell) north-east,
+// The Spine down the middle, Pumpwright and Gantry Dock as connectors, Long Drain
+// and Overlook Ramp as the long flanks.
 
 import * as THREE from 'three';
 import { PAL, TEAMS } from './config.js';
@@ -61,13 +61,13 @@ function cyl(rt, rb, h, seg, x, cy, z, color, solidTop) {
 }
 
 // A wall run along one axis with a 1m team band at its base (blueprint 7.2: the Split
-// shown in space; Tide south, Ember north, neutral near Conveyor).
+// shown in space; Azurite south, Realgar north, neutral near The Spine).
 function wall(x0, z0, x1, z1, h = 4, color = PAL.plaster) {
   const w = Math.abs(x1 - x0) || 0.8;
   const d = Math.abs(z1 - z0) || 0.8;
   const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
   box(w, h, d, cx, h / 2, cz, color, { solidTop: h });
-  const band = cz > 2 ? TEAMS.tide.deep : cz < -2 ? TEAMS.ember.deep : PAL.slateConcrete;
+  const band = cz > 2 ? TEAMS.azurite.deep : cz < -2 ? TEAMS.realgar.deep : PAL.slateConcrete;
   const bw = w === 0.8 ? 0.92 : w, bd = d === 0.8 ? 0.92 : d;
   box(bw, 1, bd, cx, 0.5, cz, band, {});
 }
@@ -115,22 +115,22 @@ export const siteZones = {
 };
 
 export const spawnPads = {
-  tide: [[-6, 27], [-3, 28], [0, 27], [3, 28], [6, 27]],
-  ember: [[-6, -27], [-3, -28], [0, -27], [3, -28], [6, -27]],
+  azurite: [[-6, 27], [-3, 28], [0, 27], [3, 28], [6, 27]],
+  realgar: [[-6, -27], [-3, -28], [0, -27], [3, -28], [6, -27]],
 };
 
 function buildGeometry(scene) {
   // Floors per area (blueprint 7.1 surface colours).
   const floor = (w, d, x, z, color) => box(w, 0.1, d, x, -0.05, z, color, {});
-  floor(84, 64, 0, 0, PAL.saltFloor);
-  floor(28, 12, 0, 26, PAL.intakeFloor);
-  floor(28, 12, 0, -26, PAL.boilerFloor);
-  floor(12, 40, 0, 0, PAL.slateConcrete);            // Conveyor strip
-  floor(28, 24, -28, -14, PAL.saltFloor);            // Site A ground
+  floor(84, 64, 0, 0, PAL.paleFloor);
+  floor(28, 12, 0, 26, PAL.sluiceFloor);
+  floor(28, 12, 0, -26, PAL.kilnFloor);
+  floor(12, 40, 0, 0, PAL.slateConcrete);            // The Spine strip
+  floor(28, 24, -28, -14, PAL.paleFloor);            // Site A ground
   floor(28, 24, 28, -14, PAL.wetConcrete);           // Site B ground
-  floor(8, 10, -10, -5, PAL.pumpFloor);              // Pump House
-  floor(24, 20, -28, 10, PAL.saltFloor);             // West Channel
-  floor(24, 20, 28, 10, PAL.slateConcrete);          // East Ramp
+  floor(8, 10, -10, -5, PAL.wrightFloor);              // Pumpwright
+  floor(24, 20, -28, 10, PAL.paleFloor);             // Long Drain
+  floor(24, 20, 28, 10, PAL.slateConcrete);          // Overlook Ramp
 
   // Perimeter walls, 6 high.
   wall(-42.5, -32.5, 42.5, -32.5, 6, PAL.plaster);
@@ -138,23 +138,23 @@ function buildGeometry(scene) {
   wall(-42.5, -32.5, -42.5, 32.5, 6, PAL.plaster);
   wall(42.5, -32.5, 42.5, 32.5, 6, PAL.plaster);
 
-  // The z=-20 divider (Boiler and sites from Conveyor), doors at A north, mid, B north.
+  // The z=-20 divider (Kiln Hall and sites from The Spine), doors at A north, mid, B north.
   wall(-42, -20, -24, -20); wall(-19, -20, -6, -20); wall(6, -20, 19, -20); wall(24, -20, 42, -20);
-  // x=-14 column (A from Boiler and Pump House), door to Pump House at z -8..-4.
+  // x=-14 column (A from Kiln Hall and Pumpwright), door to Pumpwright at z -8..-4.
   wall(-14, -32, -14, -8); wall(-14, -4, -14, 0);
-  // x=14 column (B from Boiler and Dock), door to Dock at z -8..-4.
+  // x=14 column (B from Kiln Hall and Dock), door to Gantry Dock at z -8..-4.
   wall(14, -32, 14, -8); wall(14, -4, 14, 0);
-  // The z=0 line: A south door at x -30..-26, Pump door -13..-9, Dock door 9..13, B door 26..30.
+  // The z=0 line: A south door at x -30..-26, Pumpwright door -13..-9, Gantry door 9..13, B door 26..30.
   wall(-42, 0, -30, 0); wall(-26, 0, -13, 0); wall(-9, 0, 6, 0); wall(6, 0, 9, 0 - 0); wall(13, 0, 26, 0); wall(30, 0, 42, 0);
-  // The z=20 line: West door -24..-20, Conveyor mouth -6..6, East door 20..24.
+  // The z=20 line: West door -24..-20, The Spine mouth -6..6, East door 20..24.
   wall(-42, 20, -24, 20); wall(-20, 20, -6, 20); wall(6, 20, 24 - 4, 20); wall(24, 20, 42, 20);
-  // West Channel east wall, door at z 8..12. East Ramp west wall, same door.
+  // Long Drain east wall, door at z 8..12. Overlook Ramp west wall, same door.
   wall(-18, 0, -18, 8); wall(-18, 12, -18, 20);
   wall(18, 0, 18, 8); wall(18, 12, 18, 20);
-  // Intake side walls.
+  // Sluice Gate side walls.
   wall(-28, 20, -28, 32, 4, PAL.coolShed); wall(28, 20, 28, 32, 4, PAL.coolShed);
 
-  // Conveyor belt: raised walkable top 0.9, ramps at both ends (blueprint 7.1).
+  // The Spine belt: raised walkable top 0.9, ramps at both ends (blueprint 7.1).
   box(2.4, 0.9, 20, 0, 0.45, 0, PAL.slateConcrete, { solidTop: 0.9 });
   ramps.push({ minX: -1.2, maxX: 1.2, minZ: -13, maxZ: -10, y0: 0, y1: 0.9, axis: 'z', dir: -1 });
   ramps.push({ minX: -1.2, maxX: 1.2, minZ: 10, maxZ: 13, y0: 0, y1: 0.9, axis: 'z', dir: 1 });
@@ -173,10 +173,10 @@ function buildGeometry(scene) {
   box(1.2, 1.2, 1.2, -0.0, 0.9 + 0.6, -2, PAL.crateA, { solidTop: 2.1 });
   box(1.2, 1.2, 1.2, 0.0, 0.9 + 0.6, 3, PAL.crateB, { solidTop: 2.1 });
 
-  // Site A: brine pools, salt mound, corner crates, zone outline.
-  box(7, 0.04, 5, -31, 0.02, -16, PAL.brine, {});
-  box(6, 0.04, 4, -21, 0.02, -8, PAL.brine, {});
-  pushGeom('world', new THREE.ConeGeometry(2.2, 1.1, 4), -18.5, 0.55, -17, Math.PI / 4, PAL.saltFloor);
+  // Site A: pan pools, slag mound, corner crates, zone outline.
+  box(7, 0.04, 5, -31, 0.02, -16, PAL.panGlow, {});
+  box(6, 0.04, 4, -21, 0.02, -8, PAL.panGlow, {});
+  pushGeom('world', new THREE.ConeGeometry(2.2, 1.1, 4), -18.5, 0.55, -17, Math.PI / 4, PAL.paleFloor);
   solid(-20.2, -16.8, -18.7, -15.3, 0, 1.1);
   box(2.4, 2.4, 2.4, -38, 1.2, -18, PAL.crateA, { solidTop: 2.4 });
   box(1.2, 1.2, 1.2, -38, 3.0, -18, PAL.crateB, {});
@@ -195,7 +195,7 @@ function buildGeometry(scene) {
   basicBox(1.2, 0.5, 0.3, 20, 3.4, -10, PAL.lamp);
   basicBox(1.2, 0.5, 0.3, 33, 3.4, -18, PAL.lamp);
 
-  // Boiler: three boilers, pipes, lamps.
+  // Kiln Hall: three kilns, pipes, lamps.
   cyl(1.4, 1.4, 3.6, 12, -8, 1.8, -27, PAL.rust, 3.6);
   cyl(1.4, 1.4, 3.6, 12, 0, 1.8, -28, PAL.rust, 3.6);
   cyl(1.4, 1.4, 3.6, 12, 8, 1.8, -27, PAL.rust, 3.6);
@@ -203,13 +203,13 @@ function buildGeometry(scene) {
   basicBox(1.4, 0.5, 0.3, -5, 3.2, -24, PAL.lamp);
   basicBox(1.4, 0.5, 0.3, 5, 3.2, -24, PAL.lamp);
 
-  // Pump House: two pumps, a manifold, an emissive window slot.
-  box(1.6, 1.1, 1.2, -11, 0.55, -6, PAL.pumpMint, { solidTop: 1.1 });
-  box(1.6, 1.1, 1.2, -8.5, 0.55, -3, PAL.pumpMint, { solidTop: 1.1 });
+  // Pumpwright: two pumps, a manifold, an emissive window slot.
+  box(1.6, 1.1, 1.2, -11, 0.55, -6, PAL.wrightMint, { solidTop: 1.1 });
+  box(1.6, 1.1, 1.2, -8.5, 0.55, -3, PAL.wrightMint, { solidTop: 1.1 });
   box(0.25, 2.2, 3, -13.6, 1.1, -2, PAL.slateConcrete, {});
   basicBox(0.1, 0.5, 2.4, -13.9, 2.2, -5, PAL.chalk);
 
-  // Loading Dock: raised platform 1.2 with a ramp from Conveyor, crates, roll door.
+  // Gantry Dock: raised platform 1.2 with a ramp from The Spine, crates, roll door.
   box(6, 1.2, 8, 10, 0.6, -5, PAL.slateConcrete, { solidTop: 1.2 });
   ramps.push({ minX: 5.6, maxX: 7, minZ: -7, maxZ: -3, y0: 0, y1: 1.2, axis: 'x', dir: 1 });
   box(1.2, 1.2, 1.2, 11, 1.8, -7, PAL.crateB, { solidTop: 2.4 });
@@ -217,13 +217,13 @@ function buildGeometry(scene) {
   box(0.3, 3, 3.4, 13.8, 1.5, -5, PAL.wetConcrete, {});
   hazardStripe(10, -0.8, 6, true);
 
-  // West Channel: cover crates and an overhead pipe.
+  // Long Drain: cover crates and an overhead pipe.
   box(2.4, 2.4, 2.4, -33, 1.2, 6, PAL.crateA, { solidTop: 2.4 });
   box(2.4, 1.2, 2.4, -24, 0.6, 12, PAL.crateB, { solidTop: 1.2 });
   box(2.4, 2.4, 2.4, -35, 1.2, 17, PAL.crateB, { solidTop: 2.4 });
   box(0.36, 0.36, 20, -28, 3.4, 10, PAL.slateConcrete, {}); // an overhead pipe run
 
-  // East Ramp: a ramp climbing to a 2m ledge over the lane.
+  // Overlook Ramp: a ramp climbing to a 2m ledge over the lane.
   ramps.push({ minX: 22, maxX: 36, minZ: 6, maxZ: 16, y0: 0, y1: 2.0, axis: 'z', dir: -1 });
   const erGeom = new THREE.BoxGeometry(14, 0.2, 11);
   const er = erGeom.index ? erGeom.toNonIndexed() : erGeom;
@@ -233,7 +233,7 @@ function buildGeometry(scene) {
   box(14, 2.0, 4, 29, 1.0, 4, PAL.slateConcrete, { solidTop: 2.0 });
   box(2.4, 1.2, 2.4, 24, 0.6, 17, PAL.crateA, { solidTop: 1.2 });
 
-  // Intake: two concrete barriers and hazard gates.
+  // Sluice Gate: two concrete barriers and hazard gates.
   box(3, 1.1, 0.8, -5, 0.55, 23, PAL.slateConcrete, { solidTop: 1.1 });
   box(3, 1.1, 0.8, 5, 0.55, 23, PAL.slateConcrete, { solidTop: 1.1 });
   hazardStripe(-3, 20.4, 6, true); hazardStripe(3, 20.4, 6, true);

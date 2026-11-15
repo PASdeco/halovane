@@ -20,12 +20,12 @@ export const state = {
   staged: null, // screenshot staging mode ('menu' | 'fight' | 'win') or null in real play
 
   round: 0,
-  scores: { tide: 0, ember: 0 },
+  scores: { azurite: 0, realgar: 0 },
   phaseTime: 0,        // seconds left in the current timed phase
   roundClock: 0,       // seconds left on the round timer (live phase)
   detonateClock: 0,    // seconds left before the charge detonates (planted phase)
   plantedSite: null,   // 'A' | 'B' | null
-  chargeCarrier: null, // fighter id of the Tide fighter carrying the charge
+  chargeCarrier: null, // fighter id of the Azurite fighter carrying the charge
   planting: null,      // { fighter, progress } while a plant or defuse channel runs
   roundWinner: null,
   winReason: '',       // 'elimination' | 'detonation' | 'defuse' | 'time'
@@ -42,8 +42,8 @@ export const state = {
   time: 0,             // simulation seconds since boot, fixed-step accumulated
 
   newMatch() {
-    this.scores.tide = 0;
-    this.scores.ember = 0;
+    this.scores.azurite = 0;
+    this.scores.realgar = 0;
     this.round = 0;
     for (const f of this.fighters) {
       f.money = RULES.startMoney;

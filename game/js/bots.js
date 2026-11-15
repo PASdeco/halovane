@@ -258,7 +258,7 @@ export function stepBot(f, dt) {
     if (plan.kind === 'guard' || plan.kind === 'hold') {
       // Once the charge is down, every living defender converges on that site:
       // standing at the far site wins nothing.
-      if (state.plantedSite && f.team === 'ember') {
+      if (state.plantedSite && f.team === 'realgar') {
         const zone = siteZones[state.plantedSite];
         plan.kind = 'rotate';
         plan.to = [zone.cx + (Math.random() * 8 - 4), zone.cz + (Math.random() * 6 - 3)];

@@ -1,4 +1,4 @@
-/* Saltline interface: the design blueprint's tokens and components.
+/* Halovane interface: the design blueprint's tokens and components.
    Ink plates, chamfered corners, the Split, tabular numbers everywhere. */
 
 @font-face {
@@ -25,8 +25,8 @@
 :root {
   --ink: #0B1020; --ink-raised: #151B30; --slate-line: #2A3350;
   --chalk: #F2F5FC; --mist: #A3ACC6; --signal: #FFD23F;
-  --tide: #3D8BFF; --tide-deep: #1F5FD6;
-  --ember: #FF8A2B; --ember-deep: #E0600A;
+  --azurite: #3D8BFF; --azurite-deep: #1F5FD6;
+  --realgar: #FF8A2B; --realgar-deep: #E0600A;
   --alarm: #FF3355; --vital: #5BE38B; --steel: #C9D2E8;
   --safe: 3.2vh;
   --hud-shadow: 0 .1vh 0 rgba(11,16,32,.9), 0 0 1vh rgba(11,16,32,.55);
@@ -55,8 +55,8 @@ button:focus-visible, input:focus-visible { outline: .3vh solid var(--signal); o
 
 .split { display: flex; width: 52vh; height: 1.2vh; gap: .6vh; }
 .split.small { width: 30vh; }
-.split .tide-half { flex: 1; background: var(--tide); transform: skewX(-24deg); }
-.split .ember-half { flex: 1; background: var(--ember); transform: skewX(-24deg); }
+.split .azurite-half { flex: 1; background: var(--azurite); transform: skewX(-24deg); }
+.split .realgar-half { flex: 1; background: var(--realgar); transform: skewX(-24deg); }
 
 .panel {
   background: rgba(11,16,32,.86);
@@ -180,22 +180,22 @@ button:focus-visible, input:focus-visible { outline: .3vh solid var(--signal); o
 
 #topbar { position: absolute; top: 2.4vh; left: 50%; transform: translateX(-50%); width: 35vh; display: grid; grid-template-columns: 11vh 13vh 11vh; }
 .score-plate { height: 6.4vh; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 800; font-size: 4.4vh; text-shadow: var(--hud-shadow); font-variant-numeric: tabular-nums; }
-.score-plate.tide { background: rgba(61,139,255,.85); }
-.score-plate.ember { background: rgba(255,138,43,.85); }
+.score-plate.azurite { background: rgba(61,139,255,.85); }
+.score-plate.realgar { background: rgba(255,138,43,.85); }
 .timer-plate { background: rgba(11,16,32,.58); display: flex; align-items: center; justify-content: center; }
 #timerText { font-family: var(--display); font-weight: 800; font-size: 4.4vh; text-shadow: var(--hud-shadow); font-variant-numeric: tabular-nums; }
 #timerText.urgent { color: var(--alarm); animation: pulse 1s infinite; }
 @keyframes pulse { 50% { opacity: .45; } }
 #roundLabel { grid-column: 1 / -1; text-align: center; font-size: 1.5vh; font-weight: 700; color: var(--mist); margin-top: .5vh; text-shadow: var(--hud-shadow); }
 .pips-row { display: flex; gap: .6vh; margin-top: 1vh; }
-.pips-row.tide { grid-column: 1; justify-content: flex-start; }
-.pips-row.ember { grid-column: 3; justify-content: flex-end; }
+.pips-row.azurite { grid-column: 1; justify-content: flex-start; }
+.pips-row.realgar { grid-column: 3; justify-content: flex-end; }
 .pip { width: 1.3vh; height: 1.3vh; }
-.pip.tide { border-radius: 50%; background: var(--tide); }
-.pip.ember { background: var(--ember); transform: rotate(45deg); }
+.pip.azurite { border-radius: 50%; background: var(--azurite); }
+.pip.realgar { background: var(--realgar); transform: rotate(45deg); }
 .pip.dead { background: transparent; border: .2vh solid currentColor; opacity: .6; }
-.pip.tide.dead { color: var(--tide); }
-.pip.ember.dead { color: var(--ember); }
+.pip.azurite.dead { color: var(--azurite); }
+.pip.realgar.dead { color: var(--realgar); }
 
 #killfeed { position: absolute; top: var(--safe); right: var(--safe); display: flex; flex-direction: column; gap: .6vh; align-items: flex-end; }
 .feed-row {
@@ -204,11 +204,11 @@ button:focus-visible, input:focus-visible { outline: .3vh solid var(--signal); o
 }
 .feed-row.fade { opacity: 0; }
 .feed-row.mine { outline: .25vh solid var(--signal); }
-.feed-row .fname.tide { color: var(--tide); }
-.feed-row .fname.ember { color: var(--ember); }
+.feed-row .fname.azurite { color: var(--azurite); }
+.feed-row .fname.realgar { color: var(--realgar); }
 .feed-row .bullet { width: 1.6vh; height: 1.6vh; }
-.feed-row .bullet.tide { border-radius: 50%; background: var(--tide); }
-.feed-row .bullet.ember { background: var(--ember); transform: rotate(45deg); }
+.feed-row .bullet.azurite { border-radius: 50%; background: var(--azurite); }
+.feed-row .bullet.realgar { background: var(--realgar); transform: rotate(45deg); }
 .feed-row .hs { width: 1.2vh; height: 1.2vh; background: var(--signal); transform: rotate(45deg); }
 @keyframes slidein { from { transform: translateX(2vh); opacity: 0; } }
 
@@ -238,7 +238,7 @@ button:focus-visible, input:focus-visible { outline: .3vh solid var(--signal); o
   mask: radial-gradient(circle, transparent 62%, black 63%, black 72%, transparent 73%);
 }
 
-#enemyName { position: absolute; left: 50%; top: calc(50% + 5vh); transform: translateX(-50%); font-size: 1.8vh; font-weight: 700; color: var(--ember); text-shadow: var(--hud-shadow); }
+#enemyName { position: absolute; left: 50%; top: calc(50% + 5vh); transform: translateX(-50%); font-size: 1.8vh; font-weight: 700; color: var(--realgar); text-shadow: var(--hud-shadow); }
 #confirmText { position: absolute; left: 50%; top: calc(50% + 9vh); transform: translateX(-50%); font-size: 2.4vh; font-weight: 700; text-shadow: var(--hud-shadow); opacity: 0; transition: opacity .15s; }
 #confirmText.show { opacity: 1; }
 #reloadPrompt { position: absolute; left: 50%; top: calc(50% + 14vh); transform: translateX(-50%); font-size: 2.2vh; font-weight: 700; text-shadow: var(--hud-shadow); }

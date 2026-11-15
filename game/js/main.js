@@ -1,4 +1,4 @@
-// Saltline boot and the frame loop. The simulation runs on a fixed 60 Hz step,
+// Halovane boot and the frame loop. The simulation runs on a fixed 60 Hz step,
 // kept apart from rendering (judge criterion 5): input and bots and rounds advance
 // in step(), the camera, view-model, nameplates and effects follow in render().
 // Screenshot staging (?shot=menu|fight|win) poses the three blueprint moments
@@ -50,7 +50,7 @@ const bootStamp = performance.now();
 buildWorld(scene);
 initEffects(scene);
 
-const menuBots = [displaySoldier('tide', scene), displaySoldier('ember', scene)];
+const menuBots = [displaySoldier('azurite', scene), displaySoldier('realgar', scene)];
 menuBots[0].position.set(-0.8, 0.9, 4.5);
 menuBots[0].rotation.y = 2.6;
 menuBots[1].position.set(1.8, 0.9, 7.5);
@@ -198,11 +198,11 @@ function step(dt) {
     maybeGrenade(f, scene);
     f.recoil = Math.max(0, (f.recoil || 0) - dt * 3.4);
   }
-  // A dead carrier drops the plan: the next living Tide bot takes the charge over.
+  // A dead carrier drops the plan: the next living Azurite bot takes the charge over.
   if (!state.plantedSite && state.chargeCarrier !== null) {
     const carrier = state.fighters.find((f) => f.id === state.chargeCarrier);
     if (carrier && !carrier.alive) {
-      const next = state.teamFighters('tide').find((f) => f.alive && !f.isPlayer);
+      const next = state.teamFighters('azurite').find((f) => f.alive && !f.isPlayer);
       if (next) {
         state.chargeCarrier = next.id;
         next.ai.plan = { kind: 'plant', site: state.targetSite };
@@ -247,7 +247,7 @@ const _v = new THREE.Vector3();
 function updatePlates() {
   const p = state.player;
   for (const f of state.fighters) {
-    if (f.isPlayer || f.team !== 'tide') continue;
+    if (f.isPlayer || f.team !== 'azurite') continue;
     let el = plateEls.get(f.id);
     if (!el) {
       el = document.createElement('div');
@@ -405,7 +405,7 @@ function updateCrosshair() {
   if (p.alive) {
     camera.getWorldDirection(_aimV);
     for (const t of state.fighters) {
-      if (t.team === 'tide' || !t.alive) continue;
+      if (t.team === 'azurite' || !t.alive) continue;
       _v.set(t.pos.x, t.pos.y + 1.1, t.pos.z).sub(camera.position);
       const d = _v.length();
       if (d > 60) continue;
@@ -439,7 +439,7 @@ function drainEvents() {
       case 'reload': if (ev.fighter === p) sfx.reload(); break;
       case 'planted': sfx.planted(); break;
       case 'channel': if (ev.kind === 'plant' && Math.random() < 0.2) sfx.plantBeep(); break;
-      case 'roundEnd': if (ev.winner === 'tide') sfx.roundWin(); else sfx.roundLose(); break;
+      case 'roundEnd': if (ev.winner === 'azurite') sfx.roundWin(); else sfx.roundLose(); break;
       case 'throw': if (ev.fighter === p) sfx.throwIt(); break;
       default: break;
     }
@@ -469,44 +469,45 @@ if (shotMode) {
 
 function stageFight(won) {
   const p = state.player;
-  state.scores.tide = 4;
-  state.scores.ember = 2;
+  state.scores.azurite = 4;
+  state.scores.realgar = 2;
   state.phase = Phase.LIVE;
   state.roundClock = 47;
   state.round = 7;
-  // The player inside Site A, aiming across the brine pans at an Ember bot on
+  state.targetSite = 'A'; // the staged fight plays out at Site A, so the objective line agrees
+  // The player inside Site A, aiming across the Vesper Pans at a Realgar bot on
   // the far side of the site, the A letters on the wall behind him.
   p.pos.set(-19, 0, -10);
   p.hp = 72;
   p.armour = 50;
   p.yaw = Math.atan2(-(-31 - p.pos.x), -(-15 - p.pos.z));
   p.pitch = 0.01;
-  const embers = state.teamFighters('ember');
-  const target = embers[0];
+  const realgars = state.teamFighters('realgar');
+  const target = realgars[0];
   target.pos.set(-31, 0, -15);
   target.yaw = 2.4;
   target.hp = 200; // the staged shot (a possible headshot) must wound, not kill
-  // Two Ember already down (5 against 3 on the pips), bodies on the ground.
-  for (const e of [embers[3], embers[4]]) {
+  // Two Realgar already down (5 against 3 on the pips), bodies on the ground.
+  for (const e of [realgars[3], realgars[4]]) {
     e.alive = false; e.hp = 0; e.deathAt = state.time - 1;
-    e.pos.set(e === embers[3] ? -25 : 4, 0, e === embers[3] ? -18 : -2);
+    e.pos.set(e === realgars[3] ? -25 : 4, 0, e === realgars[3] ? -18 : -2);
   }
-  embers[1].pos.set(-27, 0, -9);
-  embers[2].pos.set(20, 0, -10);
-  const tides = state.teamFighters('tide');
-  tides[1].pos.set(-14, 0, -6);
-  tides[2].pos.set(-23, 0, -5);
-  tides[3].pos.set(4, 0, 4);
-  tides[4].pos.set(6, 0, 18);
+  realgars[1].pos.set(-27, 0, -9);
+  realgars[2].pos.set(20, 0, -10);
+  const azurites = state.teamFighters('azurite');
+  azurites[1].pos.set(-14, 0, -6);
+  azurites[2].pos.set(-23, 0, -5);
+  azurites[3].pos.set(4, 0, 4);
+  azurites[4].pos.set(6, 0, 18);
   // Two kill feed rows.
-  hud.handleEvent({ type: 'kill', attacker: tides[1], target: embers[3], headshot: false });
-  hud.handleEvent({ type: 'kill', attacker: p, target: embers[4], headshot: true });
+  hud.handleEvent({ type: 'kill', attacker: azurites[1], target: realgars[3], headshot: false });
+  hud.handleEvent({ type: 'kill', attacker: p, target: realgars[4], headshot: true });
   p.loadout.mag[1] = 22; // the staged shot in the frame loop brings it to 21
   if (won) {
     state.phase = Phase.ROUND_END;
-    state.roundWinner = 'tide';
+    state.roundWinner = 'azurite';
     state.winReason = 'elimination';
-    state.scores.tide = 5;
+    state.scores.azurite = 5;
     target.alive = false;
     target.hp = 0;
     target.deathAt = state.time - 0.3;
@@ -521,12 +522,12 @@ function stageFight(won) {
 // tracer and flash hold for the capture.
 function stagedMoment() {
   const p = state.player;
-  const target = state.teamFighters('ember')[0];
+  const target = state.teamFighters('realgar')[0];
   fireOnce(p);
   lastShotAt = state.time;
   if (state.staged === 'fight') {
     hud.handleEvent({ type: 'hit', attacker: p, target, group: 'chest', killed: false });
-    const west = { pos: { x: p.pos.x - 10, y: 0, z: p.pos.z }, team: 'ember', name: 'Rook' };
+    const west = { pos: { x: p.pos.x - 10, y: 0, z: p.pos.z }, team: 'realgar', name: 'Rook' };
     hud.handleEvent({ type: 'damage', target: p, attacker: west, dmg: 28 });
   }
 }
@@ -550,16 +551,16 @@ function frame(nowMs) {
       step(STEP);
       accumulator -= STEP;
     }
-  } else if ((state.staged === 'fight' || state.staged === 'win') && !window.__saltlineFired) {
-    window.__saltlineFired = true;
+  } else if ((state.staged === 'fight' || state.staged === 'win') && !window.__halovaneFired) {
+    window.__halovaneFired = true;
     stagedMoment();
   }
   drainEvents();
   hud.updateHUD();
   render(nowMs / 1000);
-  if (state.staged && !window.__saltlineReady && (state.staged === 'menu' || window.__saltlineFired)) {
-    window.__saltlineReady = true;
-    document.title = 'Saltline — ready';
+  if (state.staged && !window.__halovaneReady && (state.staged === 'menu' || window.__halovaneFired)) {
+    window.__halovaneReady = true;
+    document.title = 'Halovane — ready';
   }
 }
 requestAnimationFrame(frame);

@@ -1,4 +1,4 @@
-// Weapons: the Kestrel rifle, the Wren pistol, the Field knife and the frag grenade.
+// Weapons: the Corvane rifle, the Pica pistol, the Sedge knife and the frag grenade.
 // Definitions, first-person view-models built from the blueprint's shapes (section 8),
 // the firing model (spread that punishes movement, recoil, damage falloff, headshots),
 // and the pooled tracers, flashes and impact particles, so hot loops allocate nothing.
@@ -11,22 +11,22 @@ import { damageFighter } from './combat.js';
 
 export const WEAPONS = {
   rifle: {
-    slot: 1, name: 'Kestrel', label: 'Rifle', damage: 36, headshotBonus: true,
+    slot: 1, name: 'Corvane', label: 'Rifle', damage: 36, headshotBonus: true,
     interval: 0.1, automatic: true, mag: 30, reserve: 90, reloadTime: 1.6,
     spreadBase: 0.35, range: 90, pellets: 1,
   },
   rifleUp: {
-    slot: 1, name: 'Kestrel Long', label: 'Rifle', damage: 44, headshotBonus: true,
+    slot: 1, name: 'Corvane Long', label: 'Rifle', damage: 44, headshotBonus: true,
     interval: 0.115, automatic: true, mag: 30, reserve: 90, reloadTime: 1.6,
     spreadBase: 0.22, range: 110, pellets: 1,
   },
   pistol: {
-    slot: 2, name: 'Wren', label: 'Pistol', damage: 34, headshotBonus: true,
+    slot: 2, name: 'Pica', label: 'Pistol', damage: 34, headshotBonus: true,
     interval: 0.17, automatic: false, mag: 12, reserve: 60, reloadTime: 1.1,
     spreadBase: 0.5, range: 60, pellets: 1,
   },
   knife: {
-    slot: 3, name: 'Field', label: 'Knife', damage: 55, headshotBonus: false,
+    slot: 3, name: 'Sedge', label: 'Knife', damage: 55, headshotBonus: false,
     interval: 0.45, automatic: false, mag: Infinity, reserve: Infinity, reloadTime: 0,
     spreadBase: 0, range: 1.7, pellets: 0,
   },
@@ -340,7 +340,7 @@ export function fireOnce(f, rng) {
   if (bestHit) {
     const falloff = dist > 25 ? Math.max(0.55, 1 - (dist - 25) / 120) : 1;
     const killed = damageFighter(bestHit.target, Math.round(def.damage * falloff), bestHit.group, f);
-    spawnImpact(_hitPoint, bestHit.target.team === 'tide' ? 0x3d8bff : 0xff8a2b, 4);
+    spawnImpact(_hitPoint, bestHit.target.team === 'azurite' ? 0x3d8bff : 0xff8a2b, 4);
     pushEvent({ type: 'hit', attacker: f, target: bestHit.target, group: bestHit.group, killed });
   } else if (wallDist < def.range) {
     spawnImpact(_hitPoint, 0xd9d2cc, 5);

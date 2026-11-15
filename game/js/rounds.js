@@ -12,9 +12,9 @@ import { freshLoadout } from './weapons.js';
 
 export function setupMatch(scene) {
   state.fighters = [];
-  for (const team of ['tide', 'ember']) {
+  for (const team of ['azurite', 'realgar']) {
     for (let i = 0; i < RULES.teamSize; i += 1) {
-      const isPlayer = team === 'tide' && i === 0;
+      const isPlayer = team === 'azurite' && i === 0;
       const f = createFighter(ALL_NAMES[team][i], team, isPlayer);
       if (!isPlayer) {
         f.ai = makeAI(f);
@@ -40,28 +40,28 @@ const PUSH = {
 };
 
 function assignPlans(site) {
-  const tide = state.teamFighters('tide').filter((f) => !f.isPlayer);
-  const ember = state.teamFighters('ember');
+  const azurite = state.teamFighters('azurite').filter((f) => !f.isPlayer);
+  const realgar = state.teamFighters('realgar');
   const other = site === 'A' ? 'B' : 'A';
-  // Tide: the carrier plants, two escort to the site, one shows at the other site.
-  const carrier = tide[0];
+  // Azurite: the carrier plants, two escort to the site, one shows at the other site.
+  const carrier = azurite[0];
   state.chargeCarrier = carrier.id;
   carrier.ai.plan = { kind: 'plant', site };
   carrier.ai.goal = null;
-  const escorts = tide.slice(1, 3);
+  const escorts = azurite.slice(1, 3);
   escorts.forEach((f, i) => {
     f.ai.plan = { kind: 'escort', to: PUSH[site][i], yaw: site === 'A' ? -2.2 : 2.2 };
     f.ai.goal = null;
   });
-  if (tide[3]) {
-    tide[3].ai.plan = { kind: 'escort', to: PUSH[other][0], yaw: 0 };
-    tide[3].ai.goal = null;
+  if (azurite[3]) {
+    azurite[3].ai.plan = { kind: 'escort', to: PUSH[other][0], yaw: 0 };
+    azurite[3].ai.goal = null;
   }
   if (state.player) state.player.ai = null;
   state.targetSite = site;
-  // Ember: two hold each site, one holds mid; the mid and one holder rotate on alerts.
+  // Realgar: two hold each site, one holds mid; the mid and one holder rotate on alerts.
   const spots = [...HOLD.A.map((h) => [...h, 'A']), ...HOLD.B.map((h) => [...h, 'B']), [...HOLD.mid[0], 'mid']];
-  ember.forEach((f, i) => {
+  realgar.forEach((f, i) => {
     const [x, z, yaw, where] = spots[i % spots.length];
     f.ai.plan = { kind: 'hold', at: [x, z], yaw, crouch: i % 2 === 0, rotateOnAlert: where !== state.targetSite && i !== 0 };
     f.ai.goal = null;
@@ -80,12 +80,12 @@ export function startRound() {
   state.winReason = '';
   state.slowmo = 0;
   const site = Math.random() < 0.5 ? 'A' : 'B';
-  for (const team of ['tide', 'ember']) {
+  for (const team of ['azurite', 'realgar']) {
     state.teamFighters(team).forEach((f, i) => {
       const [x, z] = spawnPads[team][i];
       f.pos.set(x, 0, z);
       f.vel.set(0, 0, 0);
-      f.yaw = team === 'tide' ? 0 : Math.PI;
+      f.yaw = team === 'azurite' ? 0 : Math.PI;
       f.pitch = 0;
       f.crouch = false;
       f.walking = false;
@@ -141,7 +141,7 @@ function endRound(winner, reason) {
   const planted = state.plantedSite !== null || reason === 'detonation' || reason === 'defuse';
   for (const f of state.fighters) {
     f.money = Math.min(RULES.maxMoney, f.money + (f.team === winner ? RULES.rewardWin : RULES.rewardLoss));
-    if (planted && f.team === 'tide') f.money = Math.min(RULES.maxMoney, f.money + RULES.rewardPlant);
+    if (planted && f.team === 'azurite') f.money = Math.min(RULES.maxMoney, f.money + RULES.rewardPlant);
     if (!f.alive) { f.armour = 0; f.helmet = false; f.grenades = 0; }
   }
   // The round-ending kill earns the slow moment (blueprint section 10).
@@ -152,17 +152,17 @@ function endRound(winner, reason) {
 }
 
 function checkWins() {
-  const tideAlive = state.aliveCount('tide');
-  const emberAlive = state.aliveCount('ember');
+  const azuriteAlive = state.aliveCount('azurite');
+  const realgarAlive = state.aliveCount('realgar');
   if (state.phase === Phase.PLANTED) {
-    if (emberAlive === 0) return endRound('tide', 'elimination');
-    if (state.detonateClock <= 0) return endRound('tide', 'detonation');
+    if (realgarAlive === 0) return endRound('azurite', 'elimination');
+    if (state.detonateClock <= 0) return endRound('azurite', 'detonation');
     return;
   }
   if (state.phase !== Phase.LIVE) return;
-  if (emberAlive === 0) return endRound('tide', 'elimination');
-  if (tideAlive === 0) return endRound('ember', 'elimination');
-  if (state.roundClock <= 0) return endRound('ember', 'time');
+  if (realgarAlive === 0) return endRound('azurite', 'elimination');
+  if (azuriteAlive === 0) return endRound('realgar', 'elimination');
+  if (state.roundClock <= 0) return endRound('realgar', 'time');
 }
 
 // Progress the plant or defuse channel, if one is running.
@@ -188,18 +188,18 @@ function stepChannel(dt) {
       state.detonateClock = RULES.detonateSeconds;
       state.chargeCarrier = null;
       f.money = Math.min(RULES.maxMoney, f.money + RULES.rewardPlant);
-      // Defenders converge: the two nearest living Ember bots get the defuse job
+      // Defenders converge: the two nearest living Realgar bots get the defuse job
       // and escorts, the rest hold.
       const zoneC = siteZones[ch.site];
-      const embers = state.teamFighters('ember').filter((e) => e.alive)
+      const realgars = state.teamFighters('realgar').filter((e) => e.alive)
         .sort((a, b) => a.pos.distanceTo(new THREE.Vector3(zoneC.cx, 0, zoneC.cz)) - b.pos.distanceTo(new THREE.Vector3(zoneC.cx, 0, zoneC.cz)));
-      if (embers[0]) { embers[0].ai.plan = { kind: 'defuse' }; embers[0].ai.goal = null; }
-      if (embers[1]) { embers[1].ai.plan = { kind: 'escort', to: [zoneC.cx + 5, zoneC.cz + 5], yaw: 0 }; embers[1].ai.goal = null; }
+      if (realgars[0]) { realgars[0].ai.plan = { kind: 'defuse' }; realgars[0].ai.goal = null; }
+      if (realgars[1]) { realgars[1].ai.plan = { kind: 'escort', to: [zoneC.cx + 5, zoneC.cz + 5], yaw: 0 }; realgars[1].ai.goal = null; }
       pushEvent({ type: 'planted', site: ch.site });
     } else {
       f.money = Math.min(RULES.maxMoney, f.money + RULES.rewardDefuse);
       pushEvent({ type: 'defused', site: ch.site });
-      endRound('ember', 'defuse');
+      endRound('realgar', 'defuse');
     }
   }
 }
@@ -230,7 +230,7 @@ export function stepRounds(dt) {
     case Phase.ROUND_END:
       state.phaseTime -= dt;
       if (state.phaseTime <= 0) {
-        if (state.scores.tide >= RULES.winTarget || state.scores.ember >= RULES.winTarget || state.round >= RULES.maxRounds) {
+        if (state.scores.azurite >= RULES.winTarget || state.scores.realgar >= RULES.winTarget || state.round >= RULES.maxRounds) {
           state.phase = Phase.MATCH_END;
           pushEvent({ type: 'matchEnd' });
         } else {
@@ -245,6 +245,6 @@ export function stepRounds(dt) {
 
 // Who the spectator camera follows when the player is dead.
 export function spectateTarget() {
-  const mates = state.teamFighters('tide').filter((f) => f.alive && !f.isPlayer);
+  const mates = state.teamFighters('azurite').filter((f) => f.alive && !f.isPlayer);
   return mates[0] || null;
 }

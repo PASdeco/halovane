@@ -1,4 +1,4 @@
-// A tiny static server for playing Saltline locally: serves game/ at
+// A tiny static server for playing Halovane locally: serves game/ at
 // http://localhost:8080 with the content types ES modules and fonts need.
 // Development only; the entry itself is the plain files.
 
@@ -34,5 +34,5 @@ const server = createServer((req, res) => {
 });
 
 server.listen(8080, () => {
-  process.stdout.write('Saltline at http://localhost:8080\n');
+  process.stdout.write('Halovane at http://localhost:8080\n');
 });

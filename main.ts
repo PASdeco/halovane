@@ -1,4 +1,4 @@
-// Saltline's handoff program for make.fun's threejs-fps-02 bounty (Node 22,
+// Halovane's handoff program for make.fun's threejs-fps-02 bounty (Node 22,
 // standard library only). The game itself is the game/ folder beside this file:
 // plain static files, ES modules, three.js 0.187.0 vendored under game/vendor.
 // This program copies game/ and screenshots/ into the output directory and writes

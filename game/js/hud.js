@@ -20,7 +20,7 @@ export function initHUD(h) {
   for (const id of ['menu', 'howto', 'settingsPanel', 'startPrompt', 'hud', 'buyPanel', 'pauseMenu',
     'scoreboard', 'matchEnd', 'banner', 'freezeCount', 'crosshair', 'hitmarker', 'healthNum',
     'healthBar', 'armourPlate', 'armourNum', 'armourBar', 'ammoMag', 'ammoReserve', 'weaponName',
-    'timerText', 'roundLabel', 'scoreTide', 'scoreEmber', 'pipsTide', 'pipsEmber', 'killfeed',
+    'timerText', 'roundLabel', 'scoreAzurite', 'scoreRealgar', 'pipsAzurite', 'pipsRealgar', 'killfeed',
     'reloadPrompt', 'locationLabel', 'locationDot', 'locationText', 'enemyName', 'confirmText',
     'dmgWedge', 'vignette', 'moneyText', 'channelWrap', 'channelLabel', 'channelFill',
     'objectiveText', 'spectateLabel', 'menuHint', 'pauseFooter', 'buyMoney']) {
@@ -63,14 +63,14 @@ function saveSettings() {
   state.settings.sensitivity = Number($('sensSlider').value);
   state.settings.volume = Number($('volSlider').value);
   try {
-    localStorage.setItem('saltline-settings', JSON.stringify(state.settings));
+    localStorage.setItem('halovane-settings', JSON.stringify(state.settings));
   } catch { /* offline file: settings simply do not persist */ }
   handlers.onSaveSettings && handlers.onSaveSettings();
 }
 
 export function loadSettings() {
   try {
-    const raw = localStorage.getItem('saltline-settings');
+    const raw = localStorage.getItem('halovane-settings');
     if (raw) {
       const s = JSON.parse(raw);
       if (s.sensitivity) state.settings.sensitivity = s.sensitivity;
@@ -105,12 +105,12 @@ export function hideStartPrompt() { els.startPrompt.classList.add('hidden'); }
 export function setPausedUI(on) {
   els.pauseMenu.classList.toggle('hidden', !on);
   if (on) {
-    els.pauseFooter.textContent = `Round ${state.round}    Tide ${state.scores.tide}    Ember ${state.scores.ember}`;
+    els.pauseFooter.textContent = `Round ${state.round}    Azurite ${state.scores.azurite}    Realgar ${state.scores.realgar}`;
   }
 }
 
 function buildPips() {
-  for (const [el, team] of [[els.pipsTide, 'tide'], [els.pipsEmber, 'ember']]) {
+  for (const [el, team] of [[els.pipsAzurite, 'azurite'], [els.pipsRealgar, 'realgar']]) {
     el.innerHTML = '';
     for (let i = 0; i < RULES.teamSize; i += 1) {
       const s = document.createElement('span');
@@ -132,7 +132,9 @@ export function showBanner(kind, title, sub, holdMs = 2000) {
   $('bannerSub').textContent = sub;
   $('bannerSplit').style.display = kind === 'matchwin' || kind === 'matchlose' ? 'block' : 'none';
   if (bannerTimer) clearTimeout(bannerTimer);
-  bannerTimer = setTimeout(() => { b.classList.remove('show'); }, holdMs);
+  // In a staged screenshot the banner holds, like the tracer and the flash:
+  // a wall-clock timer could expire before the capture's first frame lands.
+  bannerTimer = state.staged ? null : setTimeout(() => { b.classList.remove('show'); }, holdMs);
 }
 
 // Events from the simulation: kill feed rows, hit markers, damage feedback, sounds
@@ -157,7 +159,7 @@ function addFeedRow(ev) {
   row.className = 'feed-row';
   const k = ev.attacker;
   const killerName = k ? k.name : 'The charge';
-  const killerTeam = k ? k.team : ev.target.team === 'tide' ? 'ember' : 'tide';
+  const killerTeam = k ? k.team : ev.target.team === 'azurite' ? 'realgar' : 'azurite';
   row.innerHTML = `<span class="fname ${killerTeam}">${killerName}</span><span class="bullet ${ev.target.team}"></span><span class="fname ${ev.target.team}">${ev.target.name}</span>${ev.headshot ? '<span class="hs"></span>' : ''}`;
   if (k === state.player || ev.target === state.player) row.classList.add('mine');
   els.killfeed.appendChild(row);
@@ -236,10 +238,10 @@ export function updateHUD() {
   els.timerText.textContent = state.phase === Phase.BUY ? fmtTime(state.phaseTime) : fmtTime(clock);
   els.timerText.classList.toggle('urgent', (state.phase === Phase.LIVE || state.phase === Phase.PLANTED) && clock <= 10);
   els.roundLabel.textContent = state.phase === Phase.BUY ? 'Buy phase' : state.phase === Phase.PLANTED ? 'Charge planted' : `Round ${state.round}`;
-  els.scoreTide.textContent = state.scores.tide;
-  els.scoreEmber.textContent = state.scores.ember;
-  updatePips(els.pipsTide, 'tide');
-  updatePips(els.pipsEmber, 'ember');
+  els.scoreAzurite.textContent = state.scores.azurite;
+  els.scoreRealgar.textContent = state.scores.realgar;
+  updatePips(els.pipsAzurite, 'azurite');
+  updatePips(els.pipsRealgar, 'realgar');
 
   const showReload = p.alive && (def.slot === 1 || def.slot === 2) && mag === 0;
   const lowAmmo = p.alive && (def.slot === 1 || def.slot === 2) && mag > 0 && mag <= def.mag * 0.3 && p.loadout.reserve[def.slot] > 0;
@@ -249,7 +251,7 @@ export function updateHUD() {
   // Location label.
   const spectator = !p.alive ? spectateFighter() : p;
   const area = areaAt(spectator.pos.x, spectator.pos.z);
-  const areaName = area ? area.name : 'Saltworks';
+  const areaName = area ? area.name : 'Halbeck Works';
   if (areaName !== lastArea) {
     lastArea = areaName;
     els.locationText.textContent = areaName;
@@ -273,7 +275,7 @@ export function updateHUD() {
     els.freezeCount.classList.remove('show');
   }
   // Channel bar (the player is never the planter, but a defuse cannot happen for
-  // Tide; the bar also mirrors a nearby teammate's channel for feedback).
+  // Azurite; the bar also mirrors a nearby teammate's channel for feedback).
   const ch = state.planting;
   if (ch && (state.phase === Phase.LIVE || state.phase === Phase.PLANTED)) {
     els.channelWrap.classList.remove('hidden');
@@ -290,15 +292,15 @@ export function updateHUD() {
 }
 
 function spectateFighter() {
-  return state.teamFighters('tide').find((f) => f.alive && !f.isPlayer) || state.player;
+  return state.teamFighters('azurite').find((f) => f.alive && !f.isPlayer) || state.player;
 }
 
 function objectiveLine() {
-  if (state.phase === Phase.BUY) return `Buy gear — Tide attacks Site ${state.targetSite || 'A'}`;
+  if (state.phase === Phase.BUY) return `Buy gear — Azurite attacks Site ${state.targetSite || 'A'}`;
   if (state.phase === Phase.PLANTED) return `Charge planted at Site ${state.plantedSite} — hold the site`;
   if (state.phase === Phase.LIVE || state.phase === Phase.FREEZE) {
     const carrier = state.fighters.find((f) => f.id === state.chargeCarrier);
-    return carrier ? `${carrier.name} carries the charge to Site ${state.targetSite}` : `Eliminate Ember or plant at Site ${state.targetSite}`;
+    return carrier ? `${carrier.name} carries the charge to Site ${state.targetSite}` : `Eliminate Realgar or plant at Site ${state.targetSite}`;
   }
   return '';
 }
@@ -332,25 +334,25 @@ function onPhaseChange(prev, next) {
   }
   if (next === Phase.FREEZE) showBanner('round', `Round ${state.round}`, 'Eliminate the other team', 1500);
   if (next === Phase.ROUND_END) {
-    const won = state.roundWinner === 'tide';
+    const won = state.roundWinner === 'azurite';
     const verb = state.winReason === 'detonation' ? 'Charge detonated' : state.winReason === 'defuse' ? 'Charge defused' : state.winReason === 'time' ? 'Time expired' : '';
-    if (state.scores.tide >= RULES.winTarget || state.scores.ember >= RULES.winTarget || state.round >= RULES.maxRounds) {
+    if (state.scores.azurite >= RULES.winTarget || state.scores.realgar >= RULES.winTarget || state.round >= RULES.maxRounds) {
       // Match end screen comes with the MATCH_END phase; the banner is the short form.
-      showBanner(won ? 'matchwin' : 'matchlose', won ? 'Victory' : 'Defeat', `Tide ${state.scores.tide} — Ember ${state.scores.ember}`, 2400);
+      showBanner(won ? 'matchwin' : 'matchlose', won ? 'Victory' : 'Defeat', `Azurite ${state.scores.azurite} — Realgar ${state.scores.realgar}`, 2400);
     } else {
       showBanner(won ? 'won' : 'lost', won ? 'Round won' : 'Round lost',
-        `${verb ? `${verb} — ` : ''}${TEAMS[state.roundWinner].name} lead ${Math.max(state.scores.tide, state.scores.ember)} to ${Math.min(state.scores.tide, state.scores.ember)}`.replace('lead', state.scores.tide === state.scores.ember ? 'tied' : 'lead'), 2200);
+        `${verb ? `${verb} — ` : ''}${TEAMS[state.roundWinner].name} lead ${Math.max(state.scores.azurite, state.scores.realgar)} to ${Math.min(state.scores.azurite, state.scores.realgar)}`.replace('lead', state.scores.azurite === state.scores.realgar ? 'tied' : 'lead'), 2200);
     }
   }
   if (next === Phase.MATCH_END) buildMatchEnd();
 }
 
 function buildMatchEnd() {
-  const won = state.scores.tide > state.scores.ember;
+  const won = state.scores.azurite > state.scores.realgar;
   $('endTitle').textContent = won ? 'Victory' : 'Defeat';
-  $('endTitle').style.color = won ? TEAMS.tide.css : TEAMS.ember.css;
-  $('endScore').innerHTML = `<span class="win">Tide ${state.scores.tide}</span>   <span class="lose">Ember ${state.scores.ember}</span>`;
-  for (const team of ['tide', 'ember']) {
+  $('endTitle').style.color = won ? TEAMS.azurite.css : TEAMS.realgar.css;
+  $('endScore').innerHTML = `<span class="win">Azurite ${state.scores.azurite}</span>   <span class="lose">Realgar ${state.scores.realgar}</span>`;
+  for (const team of ['azurite', 'realgar']) {
     const body = $(`endTable-${team}`);
     body.innerHTML = '';
     const rows = state.teamFighters(team).slice().sort((a, b) => b.kills - a.kills);
@@ -368,7 +370,7 @@ function buildMatchEnd() {
 export function setScoreboardVisible(on) {
   els.scoreboard.classList.toggle('hidden', !on);
   if (!on) return;
-  for (const team of ['tide', 'ember']) {
+  for (const team of ['azurite', 'realgar']) {
     const body = $(`tabTable-${team}`);
     body.innerHTML = '';
     const rows = state.teamFighters(team).slice().sort((a, b) => b.kills - a.kills);
@@ -379,7 +381,7 @@ export function setScoreboardVisible(on) {
       body.appendChild(tr);
     }
   }
-  $('tabScore').textContent = `Tide ${state.scores.tide} — Ember ${state.scores.ember} · Round ${state.round}`;
+  $('tabScore').textContent = `Azurite ${state.scores.azurite} — Realgar ${state.scores.realgar} · Round ${state.round}`;
 }
 
 // Crosshair: spread in pixels and whether it sits on an enemy.
