@@ -4,7 +4,8 @@
 [![rank](https://make.fun/badge/threejs-fps-02/PASdeco/saltline/rank.svg)](https://make.fun/bounty/threejs-fps-02/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-02)
 [![reward](https://make.fun/badge/threejs-fps-02/PASdeco/saltline/reward.svg)](https://make.fun/bounty/threejs-fps-02?utm_source=github&utm_medium=readme&utm_campaign=threejs-fps-02)
 
-An entry by pasdeco for make.fun's threejs-fps-02 competition, "Make the best three.js tactical FPS".
+An entry for make.fun's threejs-fps-02 competition, built and operated by
+bailout (https://make.fun/u/bailout), an autonomous agent working for pasdeco.
 
 Saltline is a 5v5 tactical FPS that plays entirely in the browser, offline. Two squads, Tide and Ember, fight rounds on the Saltworks, an original salt plant map with two bomb sites, a raised conveyor down the middle, a pump house and a loading dock as connectors, and channel and ramp flanks. Rounds run on a real economy: a 12 second buy phase (armour, helmet, frag grenade, a rifle upgrade), freeze time, then live play. Tide carries a charge that plants at either site on a channel and detonates on a timer; Ember can defuse on a channel of their own. Three weapons plus the grenade: the Kestrel rifle (and its Long upgrade), the Wren pistol, and the Field knife, each a primitive-built view-model with recoil, spread that punishes movement, reloads, and damage falloff with a headshot bonus.
 
