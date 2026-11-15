@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saltline — a three.js tactical FPS</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="preload" href="fonts/BigShouldersDisplay-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/BarlowSemiCondensed-500.woff2" as="font" type="font/woff2" crossorigin>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.min.js" } }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="vignette"></div>
+
+<!-- ============ MAIN MENU ============ -->
+<div id="menu">
+  <div class="menu-shade"></div>
+  <div class="menu-col">
+    <h1 class="game-title">Saltline</h1>
+    <div class="split" id="menuSplit"><span class="tide-half"></span><span class="ember-half"></span></div>
+    <p class="subtitle">Tactical rounds against bots. First to 8.</p>
+    <nav class="menu-items">
+      <button class="menu-item selected" id="btnPlay">Play</button>
+      <button class="menu-item" id="btnHowto">How to play</button>
+      <button class="menu-item" id="btnSettings">Settings</button>
+    </nav>
+    <p class="menu-hint" id="menuHint">Start a match</p>
+  </div>
+  <div class="menu-footer-left">v1.0&nbsp;&nbsp;&nbsp;Plays offline</div>
+  <div class="menu-footer-right">WASD move&nbsp;&nbsp;&nbsp;Mouse aim&nbsp;&nbsp;&nbsp;Click fire&nbsp;&nbsp;&nbsp;R reload</div>
+
+  <div id="howto" class="panel menu-panel hidden">
+    <h2 class="panel-title">How to play</h2>
+    <div class="split small"><span class="tide-half"></span><span class="ember-half"></span></div>
+    <div class="howto-cols">
+      <div class="howto-controls">
+        <div class="ctl-row"><span class="key">WASD</span><span>Move</span></div>
+        <div class="ctl-row"><span class="key">Mouse</span><span>Aim</span></div>
+        <div class="ctl-row"><span class="key">Click</span><span>Fire</span></div>
+        <div class="ctl-row"><span class="key">R</span><span>Reload</span></div>
+        <div class="ctl-row"><span class="key">1–4</span><span>Switch weapon</span></div>
+        <div class="ctl-row"><span class="key">Shift</span><span>Walk quietly</span></div>
+        <div class="ctl-row"><span class="key">Space</span><span>Jump</span></div>
+        <div class="ctl-row"><span class="key">Ctrl</span><span>Crouch</span></div>
+        <div class="ctl-row"><span class="key">B</span><span>Buy menu</span></div>
+        <div class="ctl-row"><span class="key">Tab</span><span>Scoreboard</span></div>
+        <div class="ctl-row"><span class="key">Esc</span><span>Pause</span></div>
+      </div>
+      <div class="howto-rules">
+        <p>Rounds last 1:45.</p>
+        <p>Eliminate the other team to win the round, or plant the charge at Site A or B and hold it. Ember can defuse.</p>
+        <p>Kills and round wins earn money. Spend it in the buy phase on armour, a helmet, frag grenades and the Kestrel Long upgrade.</p>
+        <p>First team to 8 rounds wins.</p>
+      </div>
+    </div>
+    <button class="btn ghost" id="btnHowtoBack">Back</button>
+  </div>
+
+  <div id="settingsPanel" class="panel menu-panel hidden">
+    <h2 class="panel-title">Settings</h2>
+    <div class="split small"><span class="tide-half"></span><span class="ember-half"></span></div>
+    <div class="slider-row">
+      <label for="sensSlider">Sensitivity</label>
+      <input type="range" id="sensSlider" min="1" max="20" step="1" value="8">
+      <span class="slider-val" id="sensVal">8</span>
+    </div>
+    <div class="slider-row">
+      <label for="volSlider">Volume</label>
+      <input type="range" id="volSlider" min="0" max="100" step="1" value="70">
+      <span class="slider-val" id="volVal">70%</span>
+    </div>
+    <div class="panel-buttons">
+      <button class="btn ghost" id="btnSettingsBack">Back</button>
+      <button class="btn primary" id="btnSettingsSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ START PROMPT ============ -->
+<div id="startPrompt" class="hidden">
+  <div class="panel prompt-panel">
+    <p>Click to lock your mouse</p>
+    <button class="btn primary" id="btnStart">Start</button>
+  </div>
+</div>
+
+<!-- ============ HUD ============ -->
+<div id="hud" class="hidden">
+  <div id="locationLabel"><span id="locationDot"></span><span id="locationText">Intake</span></div>
+  <div id="objectiveText"></div>
+
+  <div id="topbar">
+    <div class="score-plate tide"><span id="scoreTide">0</span></div>
+    <div class="timer-plate"><span id="timerText">1:45</span></div>
+    <div class="score-plate ember"><span id="scoreEmber">0</span></div>
+    <div class="pips-row tide" id="pipsTide"></div>
+    <div class="pips-row ember" id="pipsEmber"></div>
+    <div id="roundLabel">Round 1</div>
+  </div>
+
+  <div id="killfeed"></div>
+
+  <div id="crosshair"><span class="bar t"></span><span class="bar b"></span><span class="bar l"></span><span class="bar r"></span></div>
+  <div id="hitmarker"><span></span><span></span><span></span><span></span></div>
+  <div id="dmgWedge"><div class="wedge"></div></div>
+  <div id="enemyName"></div>
+  <div id="confirmText"></div>
+  <div id="reloadPrompt"></div>
+  <div id="freezeCount"></div>
+
+  <div id="channelWrap" class="hidden">
+    <div id="channelLabel">Planting</div>
+    <div class="channel-track"><div id="channelFill"></div></div>
+  </div>
+
+  <div class="plate" id="healthPlate">
+    <div id="healthNum">100</div>
+    <div class="plate-label">Health</div>
+    <div class="plate-bar"><div id="healthBar"></div></div>
+  </div>
+  <div class="plate" id="armourPlate">
+    <div id="armourNum">0</div>
+    <div class="plate-label">Armour</div>
+    <div class="plate-bar"><div id="armourBar"></div></div>
+  </div>
+
+  <div id="loadout">
+    <div class="chip" id="chip1">1 Rifle</div>
+    <div class="chip" id="chip2">2 Pistol</div>
+    <div class="chip" id="chip3">3 Knife</div>
+    <div class="chip" id="chip4">4 Frag <span class="chip-count">0</span></div>
+  </div>
+  <div class="plate" id="ammoPlate">
+    <div id="weaponName">Kestrel</div>
+    <div class="ammo-line"><span id="ammoMag">30</span><span class="ammo-sep">/</span><span id="ammoReserve">90</span></div>
+    <div id="moneyText">$800</div>
+  </div>
+
+  <div id="spectateLabel">Spectating</div>
+
+  <div id="buyPanel" class="hidden">
+    <div class="buy-head"><span>Buy phase</span><span id="buyMoney">$800</span></div>
+    <div class="buy-row" data-item="armour"><span class="buy-key">5</span><span class="buy-name">Kevlar armour</span><span class="buy-state">$650</span></div>
+    <div class="buy-row" data-item="helmet"><span class="buy-key">6</span><span class="buy-name">Helmet</span><span class="buy-state">$350</span></div>
+    <div class="buy-row" data-item="grenade"><span class="buy-key">7</span><span class="buy-name">Frag grenade</span><span class="buy-state">$300</span></div>
+    <div class="buy-row" data-item="rifleUpgrade"><span class="buy-key">8</span><span class="buy-name">Kestrel Long upgrade</span><span class="buy-state">$900</span></div>
+    <div class="buy-foot">Keys 5–8 or click. Armour and upgrades last while you live.</div>
+  </div>
+
+  <div id="banner" class="banner"><div class="banner-inner">
+    <div id="bannerTitle">Round won</div>
+    <div id="bannerSub">Tide lead 4 to 2</div>
+    <div class="split small" id="bannerSplit"><span class="tide-half"></span><span class="ember-half"></span></div>
+  </div></div>
+</div>
+
+<!-- ============ PAUSE ============ -->
+<div id="pauseMenu" class="hidden">
+  <div class="pause-shade"></div>
+  <div class="pause-col">
+    <h2 class="panel-title">Paused</h2>
+    <div class="split small"><span class="tide-half"></span><span class="ember-half"></span></div>
+    <nav class="menu-items">
+      <button class="menu-item selected" id="btnResume">Resume</button>
+      <button class="menu-item" id="btnPauseSettings">Settings</button>
+      <button class="menu-item" id="btnQuit">Quit to menu</button>
+    </nav>
+  </div>
+  <div class="menu-footer-left" id="pauseFooter">Round 1</div>
+</div>
+
+<!-- ============ SCOREBOARD ============ -->
+<div id="scoreboard" class="hidden">
+  <div class="panel board-panel">
+    <h2 class="panel-title" id="tabScore">Tide 0 — Ember 0</h2>
+    <div class="split small"><span class="tide-half"></span><span class="ember-half"></span></div>
+    <div class="board-cols">
+      <table class="board"><thead><tr><th>Tide</th><th>K</th><th>D</th><th>Dmg</th></tr></thead><tbody id="tabTable-tide"></tbody></table>
+      <table class="board"><thead><tr><th>Ember</th><th>K</th><th>D</th><th>Dmg</th></tr></thead><tbody id="tabTable-ember"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MATCH END ============ -->
+<div id="matchEnd" class="hidden">
+  <div class="end-col">
+    <h1 id="endTitle">Victory</h1>
+    <div class="split"><span class="tide-half"></span><span class="ember-half"></span></div>
+    <div id="endScore">Tide 8 — Ember 5</div>
+    <div class="board-cols">
+      <table class="board end"><thead><tr><th>Tide</th><th>K</th><th>D</th><th>Dmg</th></tr></thead><tbody id="endTable-tide"></tbody></table>
+      <table class="board end"><thead><tr><th>Ember</th><th>K</th><th>D</th><th>Dmg</th></tr></thead><tbody id="endTable-ember"></tbody></table>
+    </div>
+    <div class="panel-buttons">
+      <button class="btn primary" id="btnAgain">Play again</button>
+      <button class="btn ghost" id="btnToMenu">Main menu</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
