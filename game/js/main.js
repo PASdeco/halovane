@@ -1,7 +1,7 @@
 // Halovane boot and the frame loop. The simulation runs on a fixed 60 Hz step,
 // kept apart from rendering (judge criterion 5): input and bots and rounds advance
 // in step(), the camera, view-model, nameplates and effects follow in render().
-// Screenshot staging (?shot=menu|fight|win) poses the three blueprint moments
+// Screenshot staging (?shot=menu|fight|planted|win) poses the four moments
 // with the game's real state, then holds the frame.
 
 import * as THREE from 'three';
@@ -459,6 +459,7 @@ if (shotMode) {
   playing = true;
   hud.showScreen(shotMode === 'menu' ? 'menu' : 'game');
   if (shotMode === 'fight' || shotMode === 'win') stageFight(shotMode === 'win');
+  if (shotMode === 'planted') stagePlanted();
   if (shotMode === 'menu') {
     state.phase = Phase.MENU; // render takes the menu orbit; the HUD stays on the menu
     playing = false;
@@ -476,7 +477,9 @@ function stageFight(won) {
   state.round = 7;
   state.targetSite = 'A'; // the staged fight plays out at Site A, so the objective line agrees
   // The player inside Site A, aiming across the Vesper Pans at a Realgar bot on
-  // the far side of the site, the A letters on the wall behind him.
+  // the far side of the site, the A letters on the wall behind him. (Two poses
+  // at Site B were tried and rejected: inside the Ironwell tank row the frame
+  // is all tank wall and the target hides behind a tank.)
   p.pos.set(-19, 0, -10);
   p.hp = 72;
   p.armour = 50;
@@ -516,6 +519,44 @@ function stageFight(won) {
   hud.updateHUD();
 }
 
+// The planted moment: the charge is down at Site A and the player holds the
+// Vesper Pans against the defuse push, one Realgar crossing the pans in the
+// open, the objective line reading the planted state.
+function stagePlanted() {
+  const p = state.player;
+  state.scores.azurite = 4;
+  state.scores.realgar = 2;
+  state.phase = Phase.PLANTED;
+  state.plantedSite = 'A';
+  state.targetSite = 'A';
+  state.detonateClock = 32;
+  state.round = 7;
+  p.pos.set(-16, 0, -6);
+  p.hp = 88;
+  p.armour = 75;
+  const realgars = state.teamFighters('realgar');
+  const target = realgars[0];
+  target.pos.set(-28, 0, -12);
+  p.yaw = Math.atan2(-(target.pos.x - p.pos.x), -(target.pos.z - p.pos.z));
+  p.pitch = 0.01;
+  target.yaw = -0.9;
+  target.hp = 200;
+  for (const e of [realgars[3], realgars[4]]) {
+    e.alive = false; e.hp = 0; e.deathAt = state.time - 1;
+    e.pos.set(e === realgars[3] ? -22 : 4, 0, e === realgars[3] ? -16 : -2);
+  }
+  realgars[1].pos.set(-34, 0, -6);
+  realgars[2].pos.set(20, 0, -10);
+  const azurites = state.teamFighters('azurite');
+  azurites[1].pos.set(-13, 0, -11);
+  azurites[2].pos.set(-21, 0, -3);
+  azurites[3].pos.set(4, 0, 4);
+  azurites[4].pos.set(6, 0, 18);
+  hud.handleEvent({ type: 'kill', attacker: azurites[1], target: realgars[3], headshot: false });
+  p.loadout.mag[1] = 22;
+  hud.updateHUD();
+}
+
 // In a staged fight or win frame: fire the player's rifle once and flash the hit
 // feedback, so the capture catches the tracer, the muzzle flash, the hit marker
 // and the damage wedge in the same instant. Time is frozen in staging, so the
@@ -525,7 +566,7 @@ function stagedMoment() {
   const target = state.teamFighters('realgar')[0];
   fireOnce(p);
   lastShotAt = state.time;
-  if (state.staged === 'fight') {
+  if (state.staged === 'fight' || state.staged === 'planted') {
     hud.handleEvent({ type: 'hit', attacker: p, target, group: 'chest', killed: false });
     const west = { pos: { x: p.pos.x - 10, y: 0, z: p.pos.z }, team: 'realgar', name: 'Rook' };
     hud.handleEvent({ type: 'damage', target: p, attacker: west, dmg: 28 });
@@ -551,7 +592,7 @@ function frame(nowMs) {
       step(STEP);
       accumulator -= STEP;
     }
-  } else if ((state.staged === 'fight' || state.staged === 'win') && !window.__halovaneFired) {
+  } else if ((state.staged === 'fight' || state.staged === 'win' || state.staged === 'planted') && !window.__halovaneFired) {
     window.__halovaneFired = true;
     stagedMoment();
   }
